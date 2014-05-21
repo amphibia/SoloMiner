@@ -68,8 +68,8 @@ namespace cryptonote
   bool get_block_hash(const block& b, crypto::hash& res);
   crypto::hash get_block_hash(const block& b);
   bool get_block_header_hash(const block& b, crypto::hash& res);
-  bool get_block_longhash(const block& b, crypto::hash& res, uint64_t height);
-  crypto::hash get_block_longhash(const block& b, uint64_t height);
+  bool get_block_longhash(const block& b, crypto::hash& res, uint64_t height, uint8_t* long_state);
+  crypto::hash get_block_longhash(const block& b, uint64_t height, uint8_t* long_state);
   bool get_bytecoin_block_longhash(const block& blk, crypto::hash& res);
   bool generate_genesis_block(block& bl);
   bool get_genesis_block_hash(crypto::hash& h);

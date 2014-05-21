@@ -29,12 +29,14 @@ public:
     m_nonceFound = false;
     m_startedThreads = 1;
     m_threads = threads;
+    uint8_t* long_state = new uint8_t[(1 << 21) * threads];
+
     std::vector<std::future<crypto::hash>> futures;
     for (size_t i = 1; i < threads; ++i) {
-      futures.emplace_back(std::async(std::launch::async, &Miner::threadProcedure, this));
+      futures.emplace_back(std::async(std::launch::async, &Miner::threadProcedure, this, long_state + (1 << 21) * i));
     }
 
-    *hash = findBlockNonce(*block);
+    *hash = findBlockNonce(*block, long_state);
     for (std::future<crypto::hash>& future : futures) {
       crypto::hash threadHash = future.get();
       if (cryptonote::null_hash != threadHash) {
@@ -42,6 +44,7 @@ public:
       }
     }
 
+    delete[] long_state;
     block->nonce = m_nonce;
     return m_nonceFound;
   }
@@ -61,17 +64,17 @@ private:
   std::atomic<bool> m_stopped;
   size_t m_threads;
 
-  crypto::hash threadProcedure() {
+  crypto::hash threadProcedure(uint8_t* long_state) {
     cryptonote::block block = *m_block;
     block.nonce = m_startedThreads++;
-    return findBlockNonce(block);
+    return findBlockNonce(block, long_state);
   }
 
-  crypto::hash findBlockNonce(cryptonote::block& block) {
+  crypto::hash findBlockNonce(cryptonote::block& block, uint8_t* long_state) {
     crypto::hash blockHash = cryptonote::null_hash;
     while (!m_nonceFound && !m_stopped) {
       crypto::hash hash;
-      bool result = get_block_longhash(block, hash, m_height);
+      bool result = get_block_longhash(block, hash, m_height, long_state);
       ++m_hashes;
       if (!result) {
         break;

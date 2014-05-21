@@ -715,12 +715,12 @@ namespace cryptonote
     return true;
   }
   //---------------------------------------------------------------
-  bool get_block_longhash(const block& b, crypto::hash& res, uint64_t height)
+  bool get_block_longhash(const block& b, crypto::hash& res, uint64_t height, uint8_t* long_state)
   {
     blobdata bd;
     if(!get_block_hashing_blob(b, bd))
       return false;
-    crypto::cn_slow_hash(bd.data(), bd.size(), res);
+    crypto::cn_slow_hash(bd.data(), bd.size(), res, long_state);
     return true;
   }
   //---------------------------------------------------------------
@@ -744,10 +744,10 @@ namespace cryptonote
     return res;
   }
   //---------------------------------------------------------------
-  crypto::hash get_block_longhash(const block& b, uint64_t height)
+  crypto::hash get_block_longhash(const block& b, uint64_t height, uint8_t* long_state)
   {
     crypto::hash p = null_hash;
-    get_block_longhash(b, p, height);
+    get_block_longhash(b, p, height, long_state);
     return p;
   }
   //---------------------------------------------------------------
@@ -756,7 +756,10 @@ namespace cryptonote
     blobdata bd;
     if(!get_bytecoin_block_hashing_blob(b, bd))
       return false;
-    crypto::cn_slow_hash(bd.data(), bd.size(), res);
+
+    uint8_t* long_state = new uint8_t[1 << 21];
+    crypto::cn_slow_hash(bd.data(), bd.size(), res, long_state);
+    delete[] long_state;
     return true;
   }
   //---------------------------------------------------------------
@@ -819,7 +822,9 @@ namespace cryptonote
     if (BLOCK_MAJOR_VERSION_1 != bl.major_version)
       return false;
 
-    proof_of_work = get_block_longhash(bl, 0);
+    uint8_t* long_state = new uint8_t[1 << 21];
+    proof_of_work = get_block_longhash(bl, 0, long_state);
+    delete[] long_state;
     return check_hash(proof_of_work, current_diffic);
   }
   //---------------------------------------------------------------

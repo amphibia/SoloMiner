@@ -270,7 +270,9 @@ namespace cryptonote
     for(; bl.nonce != std::numeric_limits<uint32_t>::max(); bl.nonce++)
     {
       crypto::hash h;
-      get_block_longhash(bl, h, height);
+      uint8_t* long_state = new uint8_t[1 << 21];
+      get_block_longhash(bl, h, height, long_state);
+      delete[] long_state;
 
       if(check_hash(h, diffic))
       {
@@ -353,11 +355,14 @@ namespace cryptonote
       if(BLOCK_MAJOR_VERSION_1 == b.major_version)
       {
         b.nonce = nonce;
-        if(!get_block_longhash(b, h, height))
+        uint8_t* long_state = new uint8_t[1 << 21];
+        if(!get_block_longhash(b, h, height, long_state))
         {
           LOG_ERROR("Failed to get block long hash");
           m_stop = true;
         }
+
+        delete[] long_state;
       }
       else if(BLOCK_MAJOR_VERSION_2 == b.major_version)
       {
